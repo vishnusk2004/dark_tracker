@@ -1,18 +1,56 @@
-{% extends "main.html" %}
+{% extends 'main.html' %}
 {% load static %}
 
 {% block body_content %}
+  {% comment %}Put Your Body Code Here Except for Header and Footer{% endcomment %}
 
-{% comment %} Put Your Body Code Here Except for Header and Footer {% endcomment %}
+  <!-- ========================================================== -->
 
-<!-- ========================================================== -->
-
-
-<div class="welcome-box">
-    
+<div class="container">
+    <div class="terminal_toolbar">
+        <div class="butt">
+            <button class="btn btn-color"></button>
+            <button class="btn"></button>
+            <button class="btn"></button>
+        </div>
+        <p class="user">Vulnerability Scanner Output </p>
+        <div class="add_tab">+</div>
+    </div>
+    <div class="terminal_body">
+        <div class="terminal_prompt">
+            <span class="terminal_user">Started Scanning the URL: </span>
+            <span class="terminal_location">~</span>
+            <span class="terminal_bling">$</span>
+            <span class="url">{{url}}</span>
+            
+        </div>
+        <div class="terminal_output">
+            <pre class="output_text">Welcome to Vulnerability Scanner Terminal</pre>
+            <br>
+            <span class="terminal_user">Headers</span>
+            <p>{{ headers.backendTech }}</p>
+            {% if headers.status %}
+                <p>{{ headers.status }}</p>
+            {% endif %}
+            <p>{{ headers.host }}</p>
+            <p>{{ headers.server }}</p>
+            <p>{{ headers.powered }}</p>
+            <br>
+            <span class="terminal_user">XSS Attack</span>
+            <p>{{ xss }}</p>
+            <br>
+            <span class="terminal_user">Error Based SQL</span>
+            <p>{{ sqli }}</p>
+            <br>
+            <span class="terminal_user">JavaScript Injection</span>
+            <p>{{ js }}</p>
+            <br>
+            <span class="terminal_user">Remote Code Execution</span>
+            <p>{{ rce }}<span class="terminal_cursor"></span></p>
+            
+        </div>
+    </div>
 </div>
 
-<!-- ========================================================== -->
-
-
-{% endblock body_content %}
+  <!-- ========================================================== -->
+{% endblock %}
