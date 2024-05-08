@@ -19,14 +19,16 @@ def home(request):
             return render(request, 'home.html', context)
         else:
             url = request.POST['url']
-            context = {}
-            scanner(url, context)
-            print(context) 
+            context = {
+                'url': url
+            }
+            scanner(url, context) 
             if 'error' in context['headers']:
                 context['error'] = context['headers']['error']
                 return render(request, 'home.html', context)
             else:
-                return render(request, 'home.html', context)
+                return render(request, 'output.html', context)
+    return render(request, 'home.html')
 
 
 
