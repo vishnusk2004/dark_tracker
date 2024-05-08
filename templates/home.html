@@ -1,0 +1,30 @@
+{% extends "main.html" %}
+{% load static %}
+
+{% block body_content %}
+
+{% comment %} Put Your Body Code Here Except for Header and Footer {% endcomment %}
+
+<!-- ========================================================== -->
+
+
+<div class="welcome-box">
+    <div class="text">
+        <p>Welcome to</p>
+        <p class="gupshup">Vulnerability Scanner</p>
+    </div>
+    <form id="sender_form" class="input-box" method="POST">
+        {% csrf_token %}
+        <label for="url"></label>
+        <input type="url" id="url" name="url" placeholder="Website URL">
+        <button type="submit"><i class='bx bx-send'></i></button>
+    </form>
+    {% if error %}
+        <p>{{error}}</p>
+    {% endif %}
+</div>
+
+<!-- ========================================================== -->
+
+
+{% endblock body_content %}
