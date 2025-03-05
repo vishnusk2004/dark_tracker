@@ -4,6 +4,9 @@ import urllib.error
 import time
 import re
 from urllib.parse import urlparse
+import matplotlib.pyplot as plt
+import io
+import urllib, base64
 
 
 class HTTP_HEADER:
@@ -15,7 +18,7 @@ class HTTP_HEADER:
 def home(request):
     if request.method == 'POST':
         if not request.POST.get('url'):
-            context["error"] = "No URL found."
+            context = "No URL found."
             return render(request, 'home.html', context)
         else:
             url = request.POST['url']
@@ -181,3 +184,25 @@ def scanner(url, context):
         js_injection_func(url, context)
         rce_func(url, context)
 
+def report(request):
+    xdata = [90.43,23,54,76,120]
+    ydata=["Security","Mallfaction","Cyber","Networking","Authentication "]
+    plt.figure(figsize=(8, 4))
+    plt.bar(ydata, xdata, color='blue')
+    plt.xlabel('dark-tracing')
+    plt.ylabel('Values')
+    plt.title('Dark tracing for early ')
+
+    # Save the chart to a BytesIO object
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    plt.close()
+    buf.seek(0)
+    image_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    buf.close()
+
+    # Pass the base64 image to the template
+    context = {
+        'chart_image': image_base64,
+    }
+    return render(request, 'report.html', context)

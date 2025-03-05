@@ -13,18 +13,11 @@
         <p>Welcome to</p>
         <p class="gupshup">Dark Tracking For Early </p>
     </div>
-    <form id="sender_form" class="input-box" method="POST">
-        {% csrf_token %}
-        <label for="url"></label>
-        <input type="url" id="url" name="url" placeholder="Website URL">
-        <button type="submit"><i class='bx bx-send'></i></button>
-    </form>
-    {% if error %}
-        <p>{{error}}</p>
-    {% endif %}
+<div>
+    <img src="data:image/png;base64,{{ chart_image }}" alt="Bar Chart">
+</div>
 
 </div>
 
-<!-- ========================================================== -->
 
 {% endblock body_content %}
