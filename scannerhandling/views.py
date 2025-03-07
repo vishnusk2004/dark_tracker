@@ -1,24 +1,13 @@
-from urllib import request
-
-from django.shortcuts import render
-import urllib.request
-import urllib.error
-import time
-import re
-from urllib.parse import urlparse
+import io, re, base64
+from django.contrib.auth.models import User
+import matplotlib
 import matplotlib.pyplot as plt
-import io
-import urllib, base64
+from bs4 import BeautifulSoup
+import urllib
+import urllib.error
+from urllib import request
 import requests
-import re
-from urllib.parse import urlparse, quote
-
-
-class HTTP_HEADER:
-    HOST = "Host"
-    SERVER = "Server"
-
-
+from urllib.parse import quote
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
@@ -26,41 +15,39 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import ScanResult
 
-# ✅ User Registration (Signup)
-def register_user(request):
-    if request.method == "POST":
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)  # Auto-login after registration
-            return redirect("dashboard")
-    else:
-        form = UserCreationForm()
-    return render(request, "register.html", {"form": form})
+matplotlib.use('Agg')  # ✅ Non-GUI mode
+
+
+# noinspection PyPep8Naming
+class HTTP_HEADER:
+    HOST = "Host"
+    SERVER = "Server"
+
 
 # ✅ User Login
-def login_user(request):
-    if request.method == "POST":
-        form = AuthenticationForm(data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            return redirect("dashboard")
-    else:
-        form = AuthenticationForm()
-    return render(request, "login.html", {"form": form})
+# def login_user(request):
+#     if request.method == "POST":
+#         form = AuthenticationForm(data=request.POST)
+#         if form.is_valid():
+#             user = form.get_user()
+#             login(request, user)
+#             return redirect("dashboard")
+#     else:
+#         form = AuthenticationForm()
+#     return render(request, "login.html", {"form": form})
+
 
 # ✅ User Logout
-def logout_user(request):
-    logout(request)
-    return redirect("login")
+# def logout_user(request):
+#     logout(request)
+#     return redirect("login")
+
 
 # ✅ Dashboard (Protected)
 @login_required
 def dashboard(request):
     scans = ScanResult.objects.filter(user=request.user)
     return render(request, "dashboard.html", {"scans": scans})
-
 
 
 def home(request):
@@ -81,7 +68,6 @@ def home(request):
                 return render(request, 'output.html', context)
 
     return render(request, 'home.html')
-
 
 
 # ============================================================== #
@@ -115,7 +101,6 @@ def headers_reader(url, context):
             headers['error'] = ("[!] HTTP Error:", e)
 
     context['headers'] = headers
-
 
 
 def main_function1(url, payloads, check):
@@ -275,21 +260,39 @@ rce_payloads = [
     "'; fork bomb:(){ :|:& };: #"
 ]
 
+
 def xss_func(url, context):
     check = re.compile(r"alert\(|XSS", re.I)
     context['xss'] = main_function1(url, xss_payloads, check)
+
 
 def error_based_sqli_func(url, context):
     check = re.compile(r"SQL syntax|mysql_fetch|ODBC|Microsoft SQL Server", re.I)
     context['sqli'] = main_function1(url, sqli_payloads, check)
 
+
 def js_injection_func(url, context):
     check = re.compile(r"alert\(|JS Injection", re.I)
     context['js'] = main_function1(url, js_payloads, check)
 
+
 def rce_func(url, context):
     check = re.compile(r"root:x|uid=|Linux|Volume Serial", re.I)
     context['rce'] = main_function1(url, rce_payloads, check)
+
+
+def extract_vulnerability_count(text):
+    """Extracts the number of vulnerabilities from the scan result text."""
+    if not text:
+        return 0
+
+    # ✅ Match "Found X vulnerabilities"
+    match = re.search(r"Found (\d+) vulnerabilities", text)
+    if match:
+        return int(match.group(1))
+
+    # ✅ Special case for Form Vulnerabilities (check for explicit detection)
+    return 1 if "Found" in text and "vulnerabilities" in text else 0
 
 
 def scanner(url, context, request, user=None):
@@ -316,7 +319,7 @@ def scanner(url, context, request, user=None):
                 js=context.get("js", ""),
                 rce=context.get("rce", ""),
                 form_vuln=context.get("form_vuln", "")
-            )
+            ).save()
 
     # ✅ Debug: Print scan results before saving to session
     print("DEBUG - Scan Results:", context)
@@ -335,40 +338,20 @@ def scanner(url, context, request, user=None):
     print("DEBUG - Saved Session Data:", request.session.get("scan_results", {}))
 
 
-import matplotlib
-matplotlib.use('Agg')  # ✅ Non-GUI mode
-import matplotlib.pyplot as plt
-import io
-import base64
-from django.shortcuts import render
-
-import matplotlib
-matplotlib.use('Agg')  # ✅ Fix Matplotlib GUI issue
-import matplotlib.pyplot as plt
-import io
-import base64
-from django.shortcuts import render
-
-import re
-
-def extract_vulnerability_count(text):
-    """Extracts the number of vulnerabilities found from the scan result text."""
-    match = re.search(r"Found (\d+) vulnerabilities", text)
-    return int(match.group(1)) if match else 0  # Return the number found or 0 if no match
-
+@login_required
 def report(request):
     """Generate a graphical and textual vulnerability report."""
 
     # Retrieve scan results from session
     scan_results = request.session.get("scan_results", {})
 
-    # ✅ Extract actual counts from the scan text
+    # ✅ Extract actual counts
     vulnerabilities = {
         "XSS": extract_vulnerability_count(scan_results.get("xss", "")),
-        "SQL Injection": extract_vulnerability_count(scan_results.get("sqli", "")),
-        "JavaScript Injection": extract_vulnerability_count(scan_results.get("js", "")),
-        "Remote Code Execution": extract_vulnerability_count(scan_results.get("rce", "")),
-        "Form Vulnerabilities": extract_vulnerability_count(scan_results.get("form_vuln", ""))
+        "SQL_Injection": extract_vulnerability_count(scan_results.get("sqli", "")),
+        "JavaScript_Injection": extract_vulnerability_count(scan_results.get("js", "")),
+        "Remote_Code_Execution": extract_vulnerability_count(scan_results.get("rce", "")),
+        "Form_Vulnerabilities": extract_vulnerability_count(scan_results.get("form_vuln", ""))
     }
 
     # ✅ Debug: Print extracted values
@@ -381,9 +364,11 @@ def report(request):
     plt.ylabel('Number of Issues Found')
     plt.title('Vulnerability Scan Report')
 
+    plt.xticks(rotation=30, ha="right")  # Rotates labels by 30 degrees, aligns them to the right
+
     # ✅ Save the plot to a BytesIO object
     buf = io.BytesIO()
-    plt.savefig(buf, format='png')
+    plt.savefig(buf, format='png', bbox_inches="tight")
     plt.close()
     buf.seek(0)
 
@@ -393,14 +378,8 @@ def report(request):
 
     return render(request, 'report.html', {
         'chart_image': chart_image,
-        'scan_results': scan_results
+        'vulnerabilities': vulnerabilities  # ✅ Pass extracted counts
     })
-
-
-
-import requests
-from bs4 import BeautifulSoup
-import re
 
 
 def test_form_vulnerabilities(url, context, check):
@@ -436,9 +415,66 @@ def test_form_vulnerabilities(url, context, check):
             if re.search(check, res.text):
                 vuln_count += 1
 
-        context['form_vuln'] = f"[!] Found {vuln_count} form vulnerabilities!" if vuln_count > 0 else "[!] No form vulnerabilities found!"
+        context[
+            'form_vuln'] = f"[!] Found {vuln_count} form vulnerabilities!" if vuln_count > 0 else "[!] No form vulnerabilities found!"
 
     except Exception as e:
         context['form_vuln'] = f"[!] Error while scanning forms: {str(e)}"
 
 
+def register_user(request):
+    if request.method == "POST":
+        username = request.POST["username"]
+        email = request.POST["email"]
+        password1 = request.POST["password1"]
+        password2 = request.POST["password2"]
+
+        if password1 != password2:
+            messages.error(request, "Passwords do not match.")
+            return redirect("register")
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already taken.")
+            return redirect("register")
+
+        user = User.objects.create_user(username=username, email=email, password=password1)
+        user.save()
+        messages.success(request, "Registration successful! Please log in.")
+        return redirect("login")
+
+    return render(request, "register.html")
+
+
+# ✅ Login View
+def login_user(request):
+    if request.method == "POST":
+        username = request.POST["username"]
+        password = request.POST["password"]
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            messages.success(request, "Login successful!")
+            return redirect("dashboard")  # Redirect to dashboard after login
+        else:
+            messages.error(request, "Invalid username or password.")
+            return redirect("login")
+
+    return render(request, "login.html")
+
+
+# ✅ Logout View
+def logout_user(request):
+    logout(request)
+    messages.success(request, "You have been logged out.")
+    return redirect("login")
+
+
+# ✅ Dashboard View (Requires Login)
+@login_required
+def dashboard(request):
+    return render(request, "dashboard.html")
+
+
+# ✅ About Page (Landing Page)
+def about(request):
+    return render(request, "about.html")  # Make sure about.html exists in templates

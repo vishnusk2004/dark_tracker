@@ -59,9 +59,63 @@
 {##}
 {#  <!-- ========================================================== -->#}
 {#{% endblock %}#}
-
-{% extends 'main.html' %}
+{#{% extends 'main.html' %}#}
 {% load static %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulnerability Scanner</title>
+
+    {% comment %} <!-------------- CSS STYLING -------------> {% endcomment %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/reponsive.css' %}">
+
+
+    {% comment %} <!-------------- FONT AWESOME ICONS -------------> {% endcomment %}
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css" rel="stylesheet">
+
+</head>
+<body>
+
+    {% load static %}
+
+<header>
+  <nav class="navbar">
+      <div class="logo">
+          <a href="index.html">
+              <h5>Dark Tracing for Early Detection </h5>
+          </a>
+      </div>
+      <label for="input-hamburger" class="hamburger "></label>
+      <input type="checkbox" id="input-hamburger" hidden>
+      <div class="menu">
+          <ul>
+              <!-- <li><a class="active" href="index.html">Home</a></li> -->
+
+
+
+
+          </ul>
+
+      </div>
+  </nav>
+</header>
+
+
+
+
+
+
+    
+    {% comment %} <!-------------- JS Linking --------------> {% endcomment %}
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>
 
 {% block body_content %}
   <div class="container">
@@ -116,3 +170,58 @@
       </div>
   </div>
 {% endblock %}
+
+
+{##}
+{#{% extends 'main.html' %}#}
+{#{% load static %}#}
+{##}
+{#{% block body_content %}#}
+{#<div class="container mx-auto mt-8 p-6">#}
+{#    <div class="bg-gray-900 text-white rounded-lg shadow-lg p-4">#}
+{#        <div class="flex justify-between items-center border-b border-gray-700 pb-2 mb-4">#}
+{#            <h2 class="text-lg font-bold">Vulnerability Scanner Output</h2>#}
+{#            <span class="text-gray-400">+</span>#}
+{#        </div>#}
+{##}
+{#        <!-- ✅ Scan Summary -->#}
+{#        <div class="bg-black p-4 rounded-lg text-green-400 font-mono">#}
+{#            <p><span class="text-yellow-400">Started Scanning the URL:</span> ~ $ #}
+{#                <span class="text-blue-400">{{ url }}</span>#}
+{#            </p>#}
+{#        </div>#}
+{##}
+{#        <div class="mt-4 space-y-3 text-gray-300">#}
+{#            <h3 class="text-yellow-400 font-bold">Headers</h3>#}
+{#            <p>{{ headers.backendTech }}</p>#}
+{#            {% if headers.status %}<p>{{ headers.status }}</p>{% endif %}#}
+{#            <p>{{ headers.host }}</p>#}
+{#            <p>{{ headers.server }}</p>#}
+{#            <p>{{ headers.powered }}</p>#}
+{##}
+{#            <h3 class="text-yellow-400 font-bold mt-4">XSS Attack</h3>#}
+{#            <p>{{ xss }}</p>#}
+{##}
+{#            <h3 class="text-yellow-400 font-bold mt-4">Error Based SQL</h3>#}
+{#            <p>{{ sqli }}</p>#}
+{##}
+{#            <h3 class="text-yellow-400 font-bold mt-4">JavaScript Injection</h3>#}
+{#            <p>{{ js }}</p>#}
+{##}
+{#            <h3 class="text-yellow-400 font-bold mt-4">Remote Code Execution</h3>#}
+{#            <p>{{ rce }}</p>#}
+{##}
+{#            <h3 class="text-yellow-400 font-bold mt-4">Form Vulnerability Scan</h3>#}
+{#            <p>{{ form_vuln }}</p>#}
+{#        </div>#}
+{##}
+{#        <!-- ✅ Report Button -->#}
+{#        <div class="mt-6 text-center">#}
+{#            <a href="{% url 'report' %}" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">#}
+{#                Show Report →#}
+{#            </a>#}
+{#        </div>#}
+{#    </div>#}
+{#</div>#}
+{#{% endblock %}#}
+

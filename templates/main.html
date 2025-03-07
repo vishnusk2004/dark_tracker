@@ -18,10 +18,35 @@
 
 </head>
 <body>
-    
-    {% include 'header.html' %}
 
-    {% block body_content %}{% endblock body_content %}
+    {% load static %}
+
+<header>
+  <nav class="navbar">
+      <div class="logo">
+          <a href="index.html">
+              <h5>Dark Tracing for Early Detection </h5>
+          </a>
+      </div>
+      <label for="input-hamburger" class="hamburger "></label>
+      <input type="checkbox" id="input-hamburger" hidden>
+      <div class="menu">
+          <ul>
+              <!-- <li><a class="active" href="index.html">Home</a></li> -->
+
+
+
+
+          </ul>
+
+      </div>
+  </nav>
+</header>
+
+
+
+
+
 
     
     {% comment %} <!-------------- JS Linking --------------> {% endcomment %}

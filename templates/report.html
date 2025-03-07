@@ -1,35 +1,80 @@
-{% extends 'main.html' %}
+{#{% extends "base.html" %}#}
+{#{% block title %}Scan Report{% endblock %}#}
+{#{% block content %}#}
+{##}
+{#<div class="min-h-screen flex items-center justify-center bg-gray-100">#}
+{#    <div class="max-w-4xl bg-white p-8 rounded-lg shadow-lg text-center">#}
+{#        <h2 class="text-3xl font-bold text-blue-600">Vulnerability Scan Report</h2>#}
+{##}
+{#        <!-- ✅ Display Graph -->#}
+{#        <div class="mt-6 flex justify-center">#}
+{#            {% if chart_image %}#}
+{#                <img src="data:image/png;base64,{{ chart_image }}" alt="Vulnerability Chart" class="rounded-lg shadow-lg">#}
+{#            {% else %}#}
+{#                <p class="text-center text-gray-600">No vulnerabilities detected.</p>#}
+{#            {% endif %}#}
+{#        </div>#}
+{##}
+{#        <!-- ✅ Scan Summary -->#}
+{#        <div class="mt-6 bg-gray-100 p-6 rounded-lg shadow-md">#}
+{#            <h3 class="text-2xl font-semibold text-gray-800">Scan Summary</h3>#}
+{#            <ul class="mt-4 space-y-2 text-gray-700 text-lg text-left">#}
+{#    <li><strong class="text-red-600">XSS Attack:</strong> {{ vulnerabilities.XSS|default:0 }}</li>#}
+{#    <li><strong class="text-blue-600">SQL Injection:</strong> {{ vulnerabilities.SQL_Injection|default:0 }}</li>#}
+{#    <li><strong class="text-yellow-600">JavaScript Injection:</strong> {{ vulnerabilities.JavaScript_Injection|default:0 }}</li>#}
+{#    <li><strong class="text-green-600">Remote Code Execution:</strong> {{ vulnerabilities.Remote_Code_Execution|default:0 }}</li>#}
+{#    <li><strong class="text-purple-600">Form Vulnerabilities:</strong> {{ vulnerabilities.Form_Vulnerabilities|default:0 }}</li>#}
+{#</ul>#}
+{##}
+{#        </div>#}
+{##}
+{#        <!-- ✅ Run Another Scan -->#}
+{#        <div class="mt-6 flex justify-center">#}
+{#            <a href="{% url 'home' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg shadow hover:bg-blue-700">#}
+{#                Run Another Scan#}
+{#            </a>#}
+{#        </div>#}
+{#    </div>#}
+{#</div>#}
+{##}
+{#{% endblock %}#}
+{% extends "base.html" %}
+{% block title %}Scan Report{% endblock %}
+{% block content %}
 
-{% block body_content %}
 <div class="min-h-screen flex items-center justify-center bg-gray-100">
-    <div class="max-w-3xl bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold text-center mb-4">Vulnerability Scan Report</h2>
+    <div class="max-w-4xl bg-white p-8 rounded-lg shadow-lg text-center">
+        <h2 class="text-3xl font-bold text-blue-600">Vulnerability Scan Report</h2>
 
-        <!-- ✅ Ensure Graph is Displayed -->
-        <div class="flex justify-center">
+        <!-- ✅ Display Graph -->
+        <div class="mt-6 flex justify-center">
             {% if chart_image %}
-                <img src="data:image/png;base64,{{ chart_image }}" alt="Vulnerability Chart" class="rounded shadow-lg">
+                <img src="data:image/png;base64,{{ chart_image }}" alt="Vulnerability Chart" class="rounded-lg shadow-lg">
             {% else %}
                 <p class="text-center text-gray-600">No vulnerabilities detected.</p>
             {% endif %}
         </div>
 
-        <div class="mt-6">
-            <h3 class="text-lg font-semibold">Scan Summary:</h3>
-            <ul class="list-disc pl-6 mt-2 text-gray-700">
-                <li><strong>XSS Attack:</strong> {{ scan_results.xss }}</li>
-                <li><strong>SQL Injection:</strong> {{ scan_results.sqli }}</li>
-                <li><strong>JavaScript Injection:</strong> {{ scan_results.js }}</li>
-                <li><strong>Remote Code Execution:</strong> {{ scan_results.rce }}</li>
-                <li><strong>Form Vulnerabilities:</strong> {{ scan_results.form_vuln }}</li>
-            </ul>
+        <!-- ✅ Scan Summary -->
+        <div class="mt-6 bg-gray-100 p-6 rounded-lg shadow-md">
+            <h3 class="text-2xl font-semibold text-gray-800">Scan Summary</h3>
+            <ul class="mt-4 space-y-2 text-gray-700 text-lg text-left">
+    <li><strong class="text-red-600">XSS Attack:</strong> {{ vulnerabilities.XSS }}</li>
+    <li><strong class="text-blue-600">SQL Injection:</strong> {{ vulnerabilities.SQL_Injection }}</li>
+    <li><strong class="text-yellow-600">JavaScript Injection:</strong> {{ vulnerabilities.JavaScript_Injection }}</li>
+    <li><strong class="text-green-600">Remote Code Execution:</strong> {{ vulnerabilities.Remote_Code_Execution }}</li>
+    <li><strong class="text-purple-600">Form Vulnerabilities:</strong> {{ vulnerabilities.Form_Vulnerabilities }}</li>
+</ul>
+
         </div>
 
+        <!-- ✅ Run Another Scan -->
         <div class="mt-6 flex justify-center">
-            <a href="/" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            <a href="{% url 'home' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg shadow hover:bg-blue-700">
                 Run Another Scan
             </a>
         </div>
     </div>
 </div>
+
 {% endblock %}

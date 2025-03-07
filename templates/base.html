@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Vulnerability Scanner{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex flex-col min-h-screen bg-gray-100">
+
+    <!-- ✅ Navbar -->
+    <nav class="bg-blue-600 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between">
+            <a href="/" class="text-2xl font-bold">Vulnerability Scanner</a>
+            <div>
+                {% if request.user.is_authenticated %}
+                    <a href="/dashboard" class="px-4">Dashboard</a>
+                    <a href="/scan" class="px-4">Start Scan</a>
+                    <a href="/logout" class="px-4">Logout</a>
+                {% else %}
+                    <a href="/about" class="px-4">About</a>
+                    <a href="/login" class="px-4">Login</a>
+                    <a href="/register" class="px-4">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- ✅ Main Content Area (Pushes footer down if content is short) -->
+    <div class="flex-grow container mx-auto mt-8">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- ✅ Footer (Always Stays at Bottom) -->
+    <footer class="bg-white shadow dark:bg-gray-900 mt-auto">
+        <div class="max-w-screen-xl mx-auto p-6">
+            <div class="flex flex-col sm:flex-row justify-between items-center">
+                <a href="/" class="flex items-center space-x-3">
+                    <img src="https://flowbite.com/docs/images/logo.svg" class="h-8" alt="Logo" />
+                    <span class="text-2xl font-semibold text-gray-900 dark:text-white">Vulnerability Scanner</span>
+                </a>
+                <ul class="flex flex-wrap items-center mt-4 sm:mt-0 text-sm font-medium text-gray-500 dark:text-gray-400">
+                    <li><a href="{% url 'about' %}" class="hover:underline me-4 md:me-6">About</a></li>
+                    <li><a href="#" class="hover:underline me-4 md:me-6">Privacy Policy</a></li>
+                    <li><a href="#" class="hover:underline me-4 md:me-6">Terms of Service</a></li>
+                    <li><a href="{% url 'home' %}" class="hover:underline">Scan Now</a></li>
+                </ul>
+            </div>
+            <hr class="my-6 border-gray-200 dark:border-gray-700" />
+            <p class="text-center text-sm text-gray-500 dark:text-gray-400">
+                &copy; 2025 <a href="/" class="hover:underline">Vulnerability Scanner</a>. All Rights Reserved.
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>

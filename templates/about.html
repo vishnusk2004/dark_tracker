@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}About - Vulnerability Scanner{% endblock %}
+{% block content %}
+
+<div class="min-h-screen flex flex-col justify-center items-center bg-gray-100">
+    
+    <!-- ✅ About Section -->
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg text-center">
+        <h2 class="text-4xl font-bold text-blue-600">About Vulnerability Scanner</h2>
+        <p class="text-gray-700 mt-4 text-lg">
+            The **Vulnerability Scanner** is an advanced security tool designed to detect vulnerabilities in websites, ensuring they are protected against potential cyber threats.
+        </p>
+
+        <p class="text-gray-600 mt-2">
+            With the increasing number of cyberattacks, it is essential to **identify security flaws** before hackers exploit them. Our scanner performs **real-time testing** to detect **XSS, SQL Injection, JavaScript Injection, Remote Code Execution, and Form Exploits**.
+        </p>
+
+        <div class="mt-6">
+            <a href="{% url 'register' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg shadow hover:bg-blue-700">
+                Get Started
+            </a>
+        </div>
+    </div>
+
+    <!-- ✅ Features Section -->
+    <div class="mt-12 max-w-5xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+            <h3 class="text-xl font-semibold text-blue-600">Cross-Site Scripting (XSS)</h3>
+            <p class="text-gray-700 mt-2">
+                Prevent **malicious script injections** that can steal user data or compromise accounts.
+            </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+            <h3 class="text-xl font-semibold text-blue-600">SQL Injection</h3>
+            <p class="text-gray-700 mt-2">
+                Detect **database vulnerabilities** that could allow unauthorized access to sensitive data.
+            </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+            <h3 class="text-xl font-semibold text-blue-600">Remote Code Execution (RCE)</h3>
+            <p class="text-gray-700 mt-2">
+                Identify **security flaws** that could let attackers run commands on a server.
+            </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+            <h3 class="text-xl font-semibold text-blue-600">Form Exploits</h3>
+            <p class="text-gray-700 mt-2">
+                Ensure **secure input validation** to prevent unauthorized data manipulation.
+            </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+            <h3 class="text-xl font-semibold text-blue-600">Real-time Analysis</h3>
+            <p class="text-gray-700 mt-2">
+                Get **instant security insights** with fast and accurate vulnerability detection.
+            </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+            <h3 class="text-xl font-semibold text-blue-600">Secure Your Website</h3>
+            <p class="text-gray-700 mt-2">
+                Stay protected with **regular vulnerability scans** and proactive security measures.
+            </p>
+        </div>
+    </div>
+
+    <!-- ✅ Why Choose Us Section -->
+    <div class="mt-12 max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg text-center">
+        <h3 class="text-3xl font-bold text-blue-600">Why Choose Our Scanner?</h3>
+        <ul class="mt-6 space-y-3 text-gray-700 text-lg text-left mx-auto max-w-2xl">
+            <li>✔ **Fast & Efficient:** Our scanner provides **real-time results** with high accuracy.</li>
+            <li>✔ **User-Friendly:** Simple to use, even for **non-technical users**.</li>
+            <li>✔ **Regular Updates:** Always up-to-date with the latest security threats.</li>
+            <li>✔ **Privacy-Focused:** We do **not store** or misuse your scanned data.</li>
+        </ul>
+    </div>
+
+    <!-- ✅ Call to Action -->
+    <div class="mt-12">
+        <a href="{% url 'register' %}" class="bg-green-600 text-white px-6 py-3 rounded-lg shadow hover:bg-green-700">
+            Start Your First Scan
+        </a>
+    </div>
+
+</div>
+
+{% endblock %}
