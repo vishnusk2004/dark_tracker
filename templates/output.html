@@ -1,61 +1,118 @@
+{#{% extends 'main.html' %}#}
+{#{% load static %}#}
+{##}
+{#{% block body_content %}#}
+{#  {% comment %}Put Your Body Code Here Except for Header and Footer{% endcomment %}#}
+{##}
+{#  <!-- ========================================================== -->#}
+{##}
+{#<div class="container">#}
+{#    <div class="terminal_toolbar">#}
+{#        <div class="butt">#}
+{#            <button class="btn btn-color"></button>#}
+{#            <button class="btn"></button>#}
+{#            <button class="btn"></button>#}
+{#        </div>#}
+{#        <p class="user">Vulnerability Scanner Output </p>#}
+{#        <div class="add_tab">+</div>#}
+{#    </div>#}
+{#    <div class="terminal_body">#}
+{#        <div class="terminal_prompt">#}
+{#            <span class="terminal_user">Started Scanning the URL: </span>#}
+{#            <span class="terminal_location">~</span>#}
+{#            <span class="terminal_bling">$</span>#}
+{#            <span class="url">{{url}}</span>#}
+{#            #}
+{#        </div>#}
+{#        <div class="terminal_output">#}
+{#            <pre class="output_text">Dark Tracking </pre>#}
+{#            <br>#}
+{#            <span class="terminal_user">Headers</span>#}
+{#            <p>{{ headers.backendTech }}</p>#}
+{#            {% if headers.status %}#}
+{#                <p>{{ headers.status }}</p>#}
+{#            {% endif %}#}
+{#            <p>{{ headers.host }}</p>#}
+{#            <p>{{ headers.server }}</p>#}
+{#            <p>{{ headers.powered }}</p>#}
+{#            <br>#}
+{#            <span class="terminal_user">XSS Attack</span>#}
+{#            <p>{{ xss }}</p>#}
+{#            <br>#}
+{#            <span class="terminal_user">Error Based SQL</span>#}
+{#            <p>{{ sqli }}</p>#}
+{#            <br>#}
+{#            <span class="terminal_user">JavaScript Injection</span>#}
+{#            <p>{{ js }}</p>#}
+{#            <br>#}
+{#            <span class="terminal_user">Remote Code Execution</span>#}
+{#            <p>{{ rce }}<span class="terminal_cursor"></span></p>#}
+{#            #}
+{#        </div>#}
+{#    </div>#}
+{#<div class="link-btn">#}
+{#              <a href="{% url 'report' %}">Show Report </a>#}
+{#              <i class="fa-solid fa-arrow-right-long"></i>#}
+{# </div>#}
+{##}
+{#</div>#}
+{##}
+{#  <!-- ========================================================== -->#}
+{#{% endblock %}#}
+
 {% extends 'main.html' %}
 {% load static %}
 
 {% block body_content %}
-  {% comment %}Put Your Body Code Here Except for Header and Footer{% endcomment %}
-
-  <!-- ========================================================== -->
-
-<div class="container">
-    <div class="terminal_toolbar">
-        <div class="butt">
-            <button class="btn btn-color"></button>
-            <button class="btn"></button>
-            <button class="btn"></button>
-        </div>
-        <p class="user">Vulnerability Scanner Output </p>
-        <div class="add_tab">+</div>
-    </div>
-    <div class="terminal_body">
-        <div class="terminal_prompt">
-            <span class="terminal_user">Started Scanning the URL: </span>
-            <span class="terminal_location">~</span>
-            <span class="terminal_bling">$</span>
-            <span class="url">{{url}}</span>
-            
-        </div>
-        <div class="terminal_output">
-            <pre class="output_text">Dark Tracking </pre>
-            <br>
-            <span class="terminal_user">Headers</span>
-            <p>{{ headers.backendTech }}</p>
-            {% if headers.status %}
-                <p>{{ headers.status }}</p>
-            {% endif %}
-            <p>{{ headers.host }}</p>
-            <p>{{ headers.server }}</p>
-            <p>{{ headers.powered }}</p>
-            <br>
-            <span class="terminal_user">XSS Attack</span>
-            <p>{{ xss }}</p>
-            <br>
-            <span class="terminal_user">Error Based SQL</span>
-            <p>{{ sqli }}</p>
-            <br>
-            <span class="terminal_user">JavaScript Injection</span>
-            <p>{{ js }}</p>
-            <br>
-            <span class="terminal_user">Remote Code Execution</span>
-            <p>{{ rce }}<span class="terminal_cursor"></span></p>
-            
-        </div>
-    </div>
-<div class="link-btn">
-              <a href="{% url 'report' %}">Show Report </a>
-              <i class="fa-solid fa-arrow-right-long"></i>
- </div>
-
-</div>
-
-  <!-- ========================================================== -->
+  <div class="container">
+      <div class="terminal_toolbar">
+          <div class="butt">
+              <button class="btn btn-color"></button>
+              <button class="btn"></button>
+              <button class="btn"></button>
+          </div>
+          <p class="user">Vulnerability Scanner Output </p>
+          <div class="add_tab">+</div>
+      </div>
+      <div class="terminal_body">
+          <div class="terminal_prompt">
+              <span class="terminal_user">Started Scanning the URL: </span>
+              <span class="terminal_location">~</span>
+              <span class="terminal_bling">$</span>
+              <span class="url">{{url}}</span>
+          </div>
+          <div class="terminal_output">
+              <pre class="output_text">Dark Tracking </pre>
+              <br>
+              <span class="terminal_user">Headers</span>
+              <p>{{ headers.backendTech }}</p>
+              {% if headers.status %}
+                  <p>{{ headers.status }}</p>
+              {% endif %}
+              <p>{{ headers.host }}</p>
+              <p>{{ headers.server }}</p>
+              <p>{{ headers.powered }}</p>
+              <br>
+              <span class="terminal_user">XSS Attack</span>
+              <p>{{ xss }}</p>
+              <br>
+              <span class="terminal_user">Error Based SQL</span>
+              <p>{{ sqli }}</p>
+              <br>
+              <span class="terminal_user">JavaScript Injection</span>
+              <p>{{ js }}</p>
+              <br>
+              <span class="terminal_user">Remote Code Execution</span>
+              <p>{{ rce }}<span class="terminal_cursor"></span></p>
+              <br>
+              <span class="terminal_user">Form Vulnerability Scan</span>
+              <p>{{ form_vuln }}</p>
+              <br>
+          </div>
+      </div>
+      <div class="link-btn">
+          <a href="{% url 'report' %}">Show Report </a>
+          <i class="fa-solid fa-arrow-right-long"></i>
+      </div>
+  </div>
 {% endblock %}

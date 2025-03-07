@@ -1,0 +1,46 @@
+{% extends 'main.html' %}
+{% block body_content %}
+<div class="min-h-screen bg-gray-100 p-6">
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-4 text-center">Dashboard</h2>
+        <p class="text-gray-600 text-center mb-4">Welcome, {{ request.user.username }}! Here are your past scans:</p>
+
+        <div class="overflow-x-auto">
+            <table class="w-full table-auto border border-gray-300 rounded-lg shadow-sm">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th class="p-2 border">URL</th>
+                        <th class="p-2 border">XSS</th>
+                        <th class="p-2 border">SQLi</th>
+                        <th class="p-2 border">JS</th>
+                        <th class="p-2 border">RCE</th>
+                        <th class="p-2 border">Forms</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scan in scans %}
+                    <tr class="hover:bg-gray-100">
+                        <td class="p-2 border">{{ scan.url }}</td>
+                        <td class="p-2 border">{{ scan.xss }}</td>
+                        <td class="p-2 border">{{ scan.sqli }}</td>
+                        <td class="p-2 border">{{ scan.js }}</td>
+                        <td class="p-2 border">{{ scan.rce }}</td>
+                        <td class="p-2 border">{{ scan.form_vuln }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="p-4 text-center text-gray-500">No scans yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-6 flex justify-center">
+            <a href="{% url 'logout' %}" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+                Logout
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
